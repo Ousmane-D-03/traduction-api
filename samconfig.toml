@@ -1,0 +1,11 @@
+version = 0.1
+
+[defaullt.deploy.parameters]
+stack_name = "trauction-api"
+resolve_s3 = true
+s3_prefix = "trauction-api"
+region = "eu-north-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []

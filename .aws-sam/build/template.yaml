@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Traduction API serverless avec Lambda et API Gateway
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+    Runtime: python3.11
+Resources:
+  TraductionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_function.lambda_handler
+      CodeUri: TraductionFunction
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          DEEPL_API_KEY: 2ecfb542-6389-4204-8fb2-48df6101a2cb:fx
+      Events:
+        TranslateApi:
+          Type: Api
+          Properties:
+            Path: /translate
+            Method: post
+    Metadata:
+      SamResourceId: TraductionFunction
+Outputs:
+  TraductionApiUrl:
+    Description: URL de l'API Gateway pour la fonction de traduction
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/translate
