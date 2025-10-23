@@ -1,33 +1,44 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
-Description: Traduction API serverless avec Lambda et API Gateway
-
-Globals:
-  Function:
-    Timeout: 10
-    MemorySize: 128
-    Runtime: python3.11
-
 Resources:
+  TranslationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Translations
+      AttributeDefinitions:
+        - AttributeName: cache_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: cache_key
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
   TraductionFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: TranslationAPIFunction
       Handler: lambda_function.lambda_handler
       CodeUri: .
+      Runtime: python3.11
+      Timeout: 30
+      MemorySize: 256
       Policies:
         - AWSLambdaBasicExecutionRole
-        - AmazonDynamoDBFullAccess
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt TranslationsTable.Arn
+            - Effect: Allow
+              Action:
+                - secretsmanager:GetSecretValue
+              Resource: !Sub 'arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:DeepLAPIKey-*'
       Environment:
         Variables:
-          DEEPL_API_KEY: "2ecfb542-6389-4204-8fb2-48df6101a2cb:fx"
+          DEEPL_SECRET_NAME: DeepLAPIKey
       Events:
         TranslateApi:
           Type: Api
           Properties:
             Path: /translate
             Method: post
-
-Outputs:
-  TraductionApiUrl:
-    Description: "URL de l'API Gateway pour la fonction de traduction"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/translate"
